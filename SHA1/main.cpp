@@ -111,7 +111,7 @@ int main(){
 
 	SHA1f(str, strlen(str), Result);
 
-	printf("SHA1\tF");
+	printf("SHA-1\tF");
 	for (int i = 0; i<5; i++)
 		printf("%x", Result[i]);
 
