@@ -1,9 +1,10 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <string.h>
 
 //Nビット回転
 int bitShiftN(unsigned num, int n){
-	return ((num) << n) | ((num) >> 32 - n);
+	return ((num) << n) | ((num) >> (32 - n));
 }
 
 //関数f
@@ -32,14 +33,48 @@ unsigned int K(int t)
 		return 0xCA62C1D6;
 }
 
-void Sha1Step(unsigned int *W, unsigned int *H){
+void SHA1f(char *str, unsigned int length, unsigned int *H){
+
+	unsigned char msg[64];
+	unsigned int W[80];
 	unsigned int A, B, C, D, E;
 	unsigned int tmp;
+
+	//A~E初期値
+	H[0] = 0x67452301;
+	H[1] = 0xEFCDAB89;
+	H[2] = 0x98BADCFE;
+	H[3] = 0x10325476;
+	H[4] = 0xC3D2E1F0;
+
+	memcpy((char*)msg, str, length);
+
+	//1の付加
+	msg[length] = 0x80;
+	//0の付加
+	for (int i = length + 1; i<60; i++)
+	{
+		msg[i] = 0;
+	}
+	//サイズ情報
+	msg[60] = length * 8 >> 24;
+	msg[61] = length * 8 >> 16;
+	msg[62] = length * 8 >> 8;
+	msg[63] = length * 8;
+
+	//W0~W15
+	for (int i = 0; i<16; i++){
+		W[i] = msg[i * 4] << 24;
+		W[i] |= msg[i * 4 + 1] << 16;
+		W[i] |= msg[i * 4 + 2] << 8;
+		W[i] |= msg[i * 4 + 3];
+	}
 
 	//W16~W79
 	for (int i = 16; i<80; i++){
 		W[i] = bitShiftN(W[i - 16] ^ W[i - 14] ^ W[i - 8] ^ W[i - 3], 1);
 	}
+
 	A = H[0];
 	B = H[1];
 	C = H[2];
@@ -61,59 +96,21 @@ void Sha1Step(unsigned int *W, unsigned int *H){
 	H[2] += C;
 	H[3] += D;
 	H[4] += E;
-}
-
-void SHA1f(char *p, unsigned int length, unsigned int *pH){
-
-	unsigned char Block[64];
-	unsigned int WBlock[80];
-
-	//A~E初期値
-	pH[0] = 0x67452301;
-	pH[1] = 0xEFCDAB89;
-	pH[2] = 0x98BADCFE;
-	pH[3] = 0x10325476;
-	pH[4] = 0xC3D2E1F0;
-
-	memcpy((char*)Block, p, length);
-
-	//1の付加
-	Block[length] = 0x80;
-	//0の付加
-	for (int i = length + 1; i<60; i++)
-	{
-		Block[i] = 0;
-	}
-	//サイズ情報
-	Block[60] = length * 8 >> 24;
-	Block[61] = length * 8 >> 16;
-	Block[62] = length * 8 >> 8;
-	Block[63] = length * 8;
-
-	//W0~W15
-	for (int i = 0; i<16; i++){
-		WBlock[i] = Block[i * 4] << 24;
-		WBlock[i] |= Block[i * 4 + 1] << 16;
-		WBlock[i] |= Block[i * 4 + 2] << 8;
-		WBlock[i] |= Block[i * 4 + 3];
-	}
-
-	Sha1Step(WBlock, pH);
 
 }
 
 int main(){
-	unsigned int Result[5];
+	unsigned int sha1num[5];
 	char str[100];
 
 	printf("文字列\t：");
-	gets_s(str,sizeof(str));
+	gets(str);
 
-	SHA1f(str, strlen(str), Result);
-
+	SHA1f(str, strlen(str), sha1num);
+	
 	printf("SHA-1\t：");
 	for (int i = 0; i<5; i++)
-		printf("%x", Result[i]);
+		printf("%x", sha1num[i]);
 
 	printf("\n");
 	return 0;
